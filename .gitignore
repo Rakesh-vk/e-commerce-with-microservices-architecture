@@ -1,0 +1,18 @@
+cat > .gitignore << 'EOF'
+# Environment secrets
+.env
+
+# Logs
+logs/
+*.log
+
+# Build output
+**/target/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+EOF
