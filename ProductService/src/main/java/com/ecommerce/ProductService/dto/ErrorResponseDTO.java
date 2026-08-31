@@ -1,4 +1,4 @@
-package com.ecommerce.OrderService.dto;
+package com.ecommerce.ProductService.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
