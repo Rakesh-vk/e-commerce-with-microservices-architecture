@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 @Slf4j
 public class ProductController {
@@ -26,7 +26,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponseDTO> getProductDetails(@RequestParam UUID id){
+    public ResponseEntity<ProductResponseDTO> getProductDetails(@PathVariable UUID id){
         return new ResponseEntity<>(productServiceImpl.getProductById(id),HttpStatus.OK);
     }
 

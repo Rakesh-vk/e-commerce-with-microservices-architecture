@@ -36,17 +36,12 @@ public class ProductServiceImpl implements  ProductService{
 
     @Override
     public ProductResponseDTO getProductById(UUID id) {
-        Product product= productRepository.getReferenceById(id);
-        ProductResponseDTO responseDTO= new ProductResponseDTO(
-                product.getId(),
-                product.getProductName(),
-                product.getPrice(),
-                product.getStockQty(),
-                product.getCategory(),
-                product.getCreateAt()
-        );
+        Product product = productRepository.findById(id)
+                .orElseThrow(() ->
+                        new ProductNotFoundException("Product does not exist")
+                );
 
-        return responseDTO;
+        return ProductMapper.toResponse(product);
     }
 
     @Override
