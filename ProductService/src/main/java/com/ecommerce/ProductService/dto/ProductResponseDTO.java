@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 // ProductResponse — what the client gets back
-public record ProductResponse(
+public record ProductResponseDTO(
         UUID id,
         String productName,
         BigDecimal price,

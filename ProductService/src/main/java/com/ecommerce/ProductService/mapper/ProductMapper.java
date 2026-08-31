@@ -1,12 +1,12 @@
 package com.ecommerce.ProductService.mapper;
 
-import com.ecommerce.ProductService.dto.ProductCreateRequest;
-import com.ecommerce.ProductService.dto.ProductResponse;
+import com.ecommerce.ProductService.dto.ProductCreateRequestDTO;
+import com.ecommerce.ProductService.dto.ProductResponseDTO;
 import com.ecommerce.ProductService.entity.Product;
 
 public class ProductMapper {
 
-    public static Product toEntity(ProductCreateRequest request) {
+    public static Product toEntity(ProductCreateRequestDTO request) {
         return Product.builder()
                 .productName(request.productName())
                 .price(request.price())
@@ -15,8 +15,8 @@ public class ProductMapper {
                 .build();
     }
 
-    public static ProductResponse toResponse(Product product) {
-        return new ProductResponse(
+    public static ProductResponseDTO toResponse(Product product) {
+        return new ProductResponseDTO(
                 product.getId(),
                 product.getProductName(),
                 product.getPrice(),

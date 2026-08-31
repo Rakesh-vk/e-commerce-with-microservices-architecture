@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
 // ProductCreateRequest — what the client sends
-public record ProductCreateRequest(
+public record ProductCreateRequestDTO(
         @NotBlank String productName,
         @NotNull @Positive BigDecimal price,
         @NotNull @Min(0) int stockQty,

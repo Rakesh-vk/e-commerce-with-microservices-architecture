@@ -1,5 +1,6 @@
 package com.ecommerce.ProductService.repository;
 
+import com.ecommerce.ProductService.dto.ProductUpdateRequestDTO;
 import com.ecommerce.ProductService.entity.Product;
 import com.ecommerce.ProductService.entity.ProductCategory;
 import org.springframework.data.domain.Page;
@@ -12,13 +13,7 @@ import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByCategory(ProductCategory category);
-    List<Product> findByName(String name);
+    List<Product> findByProductName(String productName);
 
-    List<Product> findByStockQtyLessThan(int threshold);
-    List<Product> findByProductNameContainingIgnoreCase(String keyword);
-
-    boolean existsByProductNameIgnoreCase(String productName);
-
-    List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
 
 }

@@ -1,24 +1,32 @@
 package com.ecommerce.ProductService.service;
 
+import com.ecommerce.ProductService.dto.ProductCreateRequestDTO;
+import com.ecommerce.ProductService.dto.ProductResponseDTO;
+import com.ecommerce.ProductService.dto.ProductUpdateRequestDTO;
 import com.ecommerce.ProductService.entity.Product;
 import com.ecommerce.ProductService.entity.ProductCategory;
+import com.ecommerce.ProductService.exception.ProductNotFoundException;
+import com.ecommerce.ProductService.mapper.ProductMapper;
 import com.ecommerce.ProductService.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductServiceImpl implements  ProductService{
     private final ProductRepository productRepository;
 
     @Override
-    public List<Product> getAllProduct() {
-        return productRepository.findAll();
+    public List<ProductResponseDTO> getAllProduct() {
+        return productRepository.findAll().stream()
+                .map(ProductMapper::toResponse)
+                .toList();
     }
 
     @Override
@@ -27,18 +35,60 @@ public class ProductServiceImpl implements  ProductService{
     }
 
     @Override
-    public Product getProductById(UUID id) {
-        return productRepository.getReferenceById(id);
+    public ProductResponseDTO getProductById(UUID id) {
+        Product product= productRepository.getReferenceById(id);
+        ProductResponseDTO responseDTO= new ProductResponseDTO(
+                product.getId(),
+                product.getProductName(),
+                product.getPrice(),
+                product.getStockQty(),
+                product.getCategory(),
+                product.getCreateAt()
+        );
+
+        return responseDTO;
     }
 
     @Override
     public List<Product> getAllProductsByName(String name) {
-        return productRepository.findByName(name);
+        return productRepository.findByProductName(name);
+    }
+    public ProductResponseDTO updateProduct(ProductUpdateRequestDTO requestDTO){
+        Product product = productRepository.findById(requestDTO.id())
+                .orElseThrow(() ->
+                        new ProductNotFoundException("Product not found")
+                );
+        product.setProductName(requestDTO.productName());
+        product.setCategory(requestDTO.category());
+        product.setPrice(requestDTO.price());
+        product.setStockQty(requestDTO.stockQty());
+
+        Product updatedProduct = productRepository.save(product);
+
+        return ProductMapper.toResponse(updatedProduct);
+
     }
 
     @Override
-    public Product addProduct(Product product) {
-        return productRepository.save(product);
+    public ProductResponseDTO addProduct(ProductCreateRequestDTO requestDTO) {
+        log.debug("entered add product");
+
+        Product product = new Product();
+        product.setProductName(requestDTO.productName());
+        product.setCategory(requestDTO.category());
+        product.setPrice(requestDTO.price());
+        product.setStockQty(requestDTO.stockQty());
+        Product savedProduct = productRepository.save(product);
+
+        ProductResponseDTO responseDTO= new ProductResponseDTO(
+                savedProduct.getId(),
+                savedProduct.getProductName(),
+                savedProduct.getPrice(),
+                savedProduct.getStockQty(),
+                savedProduct.getCategory(),
+                savedProduct.getCreateAt()
+        );
+        return responseDTO;
     }
 
     @Override
