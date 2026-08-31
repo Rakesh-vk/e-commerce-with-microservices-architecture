@@ -1,6 +1,5 @@
 package com.ecommerce.OrderService.mapper;
 
-
 import com.ecommerce.OrderService.dto.CreateOrderRequestDTO;
 import com.ecommerce.OrderService.dto.OrderItemRequestDTO;
 import com.ecommerce.OrderService.dto.OrderItemResponseDTO;
@@ -13,8 +12,10 @@ import java.util.List;
 
 public class OrderMapper {
 
-    public static Order toEntity(CreateOrderRequestDTO request) {
+    private OrderMapper() {
+    }
 
+    public static Order toEntity(CreateOrderRequestDTO request) {
         Order order = Order.builder()
                 .userId(request.userId())
                 .status(OrderStatus.PENDING)
@@ -26,14 +27,12 @@ public class OrderMapper {
                 )
                 .build();
 
-        // Set the bidirectional relationship
         order.getItems().forEach(item -> item.setOrder(order));
 
         return order;
     }
 
     public static OrderItem toEntity(OrderItemRequestDTO request) {
-
         return OrderItem.builder()
                 .productId(request.productId())
                 .quantity(request.quantity())
@@ -41,7 +40,6 @@ public class OrderMapper {
     }
 
     public static OrderResponseDTO toResponse(Order order) {
-
         List<OrderItemResponseDTO> items = order.getItems()
                 .stream()
                 .map(OrderMapper::toResponse)
@@ -58,7 +56,6 @@ public class OrderMapper {
     }
 
     public static OrderItemResponseDTO toResponse(OrderItem item) {
-
         return new OrderItemResponseDTO(
                 item.getId(),
                 item.getProductId(),
