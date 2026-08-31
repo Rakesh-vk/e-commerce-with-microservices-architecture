@@ -1,6 +1,6 @@
 package com.ecommerce.UserService.exception;
 
-import com.ecommerce.OrderService.dto.ErrorResponseDTO;
+import com.ecommerce.UserService.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponseDTO> BadCredentialExceptionHandler(
-            DuplicateEmailException ex){
+            BadCredentialsException ex){
         ErrorResponseDTO errorResponseDTO =
                 new ErrorResponseDTO(
                         HttpStatus.CONFLICT.value(),
