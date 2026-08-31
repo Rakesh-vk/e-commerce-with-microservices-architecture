@@ -1,6 +1,6 @@
 package com.ecommerce.UserService.exception;
 
-import com.ecommerce.UserService.dto.ErrorResponseDTO;
+import com.ecommerce.OrderService.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
