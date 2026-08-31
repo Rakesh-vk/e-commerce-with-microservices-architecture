@@ -6,6 +6,7 @@ import com.ecommerce.OrderService.entity.Order;
 import com.ecommerce.OrderService.service.OrderService;
 import com.ecommerce.OrderService.service.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,16 +17,19 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@Slf4j
 public class OrderController {
     private final OrderServiceImpl orderServiceImpl;
 
     @GetMapping("{id}")
     public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable UUID id) {
+        log.debug("Entered getOrderById");
         return ResponseEntity.ok(orderServiceImpl.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<OrderResponseDTO> addOrder(@RequestBody CreateOrderRequestDTO requestDTO){
+        log.debug("Entered addOrder");
         OrderResponseDTO order = orderServiceImpl.createOrder(requestDTO);
 
         return ResponseEntity.ok(order);

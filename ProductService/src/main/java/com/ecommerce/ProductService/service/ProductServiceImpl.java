@@ -5,9 +5,11 @@ import com.ecommerce.ProductService.dto.ProductResponseDTO;
 import com.ecommerce.ProductService.dto.ProductUpdateRequestDTO;
 import com.ecommerce.ProductService.entity.Product;
 import com.ecommerce.ProductService.entity.ProductCategory;
+import com.ecommerce.ProductService.exception.InsufficientStockException;
 import com.ecommerce.ProductService.exception.ProductNotFoundException;
 import com.ecommerce.ProductService.mapper.ProductMapper;
 import com.ecommerce.ProductService.repository.ProductRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -89,5 +91,29 @@ public class ProductServiceImpl implements  ProductService{
     @Override
     public void deleteProduct(Long productId) {
 
+    }
+
+    @Override
+    @Transactional
+    public void decreaseStock(UUID productId, int quantity) {
+
+        int updatedRows = productRepository.decreaseStock(
+                productId,
+                quantity
+        );
+
+        if (updatedRows == 1) {
+            return;
+        }
+
+        if (!productRepository.existsById(productId)) {
+            throw new ProductNotFoundException(
+                    "Product does not exist"
+            );
+        }
+
+        throw new InsufficientStockException(
+                "Insufficient stock for product " + productId
+        );
     }
 }

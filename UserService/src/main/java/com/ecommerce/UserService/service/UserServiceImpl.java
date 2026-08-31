@@ -11,10 +11,12 @@ import com.ecommerce.UserService.security.JwtTokenProvider;
 
 import com.ecommerce.UserService.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
@@ -23,6 +25,7 @@ public class UserServiceImpl implements UserService{
 
     public UserResponse register(UserRegisterRequest userRegisterRequest){
         // checking if the email is already exist
+        log.debug("register Service");
         if(userRepository.existsByEmail(userRegisterRequest.getEmail())){
             throw new DuplicateEmailException(userRegisterRequest.getEmail());
         }
@@ -37,6 +40,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public String login(LoginRequest request) {
+        log.debug("LogIn Service");
         User user= userRepository.findByEmail(request.getEmail()).
                 orElseThrow();
 

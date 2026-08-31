@@ -3,7 +3,9 @@ package com.ecommerce.ProductService.controller;
 import com.ecommerce.ProductService.dto.ProductCreateRequestDTO;
 import com.ecommerce.ProductService.dto.ProductResponseDTO;
 import com.ecommerce.ProductService.dto.ProductUpdateRequestDTO;
+import com.ecommerce.ProductService.dto.StockUpdateRequestDTO;
 import com.ecommerce.ProductService.service.ProductServiceImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -39,5 +41,14 @@ public class ProductController {
     @PatchMapping
     public ResponseEntity<ProductResponseDTO> updateProduct(@RequestBody ProductUpdateRequestDTO updateRequestDTO){
         return new ResponseEntity<>(productServiceImpl.updateProduct(updateRequestDTO),HttpStatus.OK);
+    }
+    @PatchMapping("/{id}/stock")
+    public ResponseEntity<Void> decreaseStock(
+            @PathVariable UUID id,
+            @Valid @RequestBody StockUpdateRequestDTO request) {
+
+        productServiceImpl.decreaseStock(id, request.quantity());
+
+        return ResponseEntity.noContent().build();
     }
 }

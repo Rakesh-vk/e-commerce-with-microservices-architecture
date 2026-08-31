@@ -12,17 +12,32 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleInsufficientStock(
+    public ResponseEntity<ErrorResponseDTO> handleProductNotFound(
             ProductNotFoundException ex) {
 
         ErrorResponseDTO error = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.NOT_FOUND.value(),
                 ex.getMessage(),
                 LocalDateTime.now()
         );
 
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.NOT_FOUND)
+                .body(error);
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ErrorResponseDTO> handleInsufficientStock(
+            InsufficientStockException ex) {
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(error);
     }
 }

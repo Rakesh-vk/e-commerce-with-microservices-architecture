@@ -13,6 +13,7 @@ import com.ecommerce.OrderService.exception.ProductNotFoundException;
 import com.ecommerce.OrderService.mapper.OrderMapper;
 import com.ecommerce.OrderService.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -23,12 +24,14 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService{
     private final OrderRepository orderRepository;
     private final ProductServiceClient productServiceClient;
 
     @Override
     public OrderResponseDTO getById(UUID id) {
+        log.debug("getById service");
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
         return OrderMapper.toResponse(order);
@@ -36,17 +39,18 @@ public class OrderServiceImpl implements OrderService{
 
     @Override
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
-
+        log.debug("createOrder service");
         List<OrderItem> items = request.items().stream()
                 .map(itemRequest -> {
-                    ProductClientResponse product = productServiceClient.getProduct(itemRequest.productId());
-                    if(product== null){
-                        throw new ProductNotFoundException("Invalid product");
-                    }
-                    if (product.stockQty() < itemRequest.quantity()) {
-                        throw new InsufficientStockException(
-                                "Insufficient stock for product " + product.id());
-                    }
+                    log.debug("calling productServiceClient");
+                    ProductClientResponse product = productServiceClient.getProduct
+                            (itemRequest.productId());
+                    log.debug(product.toString());
+
+                    productServiceClient.decreaseStock(
+                            product.id(),
+                            itemRequest.quantity()
+                    );
                     return OrderItem.builder()
                             .productId(product.id())
                             .quantity(itemRequest.quantity())

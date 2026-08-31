@@ -1,6 +1,8 @@
 package com.ecommerce.OrderService.client;
 
 import com.ecommerce.OrderService.client.dto.ProductClientResponse;
+import com.ecommerce.OrderService.client.dto.StockUpdateRequestDTO;
+import com.ecommerce.OrderService.exception.InsufficientStockException;
 import com.ecommerce.OrderService.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,18 +21,41 @@ public class ProductServiceClient {
 
     public ProductClientResponse getProduct(UUID productId) {
         log.debug("Entered ProductServiceClient");
+
         try {
+            log.debug("krakesh entered try");
+
             ProductClientResponse response = productServiceRestClient.get()
                     .uri("/api/products/{id}", productId)
                     .retrieve()
                     .body(ProductClientResponse.class);
 
+            log.debug("Product response: {}", response);
+
             return response;
 
         } catch (HttpClientErrorException.NotFound ex) {
-            log.debug("Error occurred in ProductServiceClient");
+            log.error("Product not found: {}", productId);
+            throw new ProductNotFoundException("Product not found");
+        }
+    }
+
+    public void decreaseStock(UUID productId, int quantity) {
+        try {
+            productServiceRestClient.patch()
+                    .uri("/api/products/{id}/stock", productId)
+                    .body(new StockUpdateRequestDTO(quantity))
+                    .retrieve()
+                    .toBodilessEntity();
+
+        } catch (HttpClientErrorException.NotFound ex) {
             throw new ProductNotFoundException(
                     "Product not found: " + productId
+            );
+
+        } catch (HttpClientErrorException.Conflict ex) {
+            throw new InsufficientStockException(
+                    "Insufficient stock for product " + productId
             );
         }
     }
