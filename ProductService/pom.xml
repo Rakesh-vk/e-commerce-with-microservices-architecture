@@ -22,20 +22,38 @@
     <!-- ========================================================= -->
 
     <groupId>com.ecommerce</groupId>
-    <artifactId>ProductService</artifactId>
+    <artifactId>OrderService</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>ProductService</name>
-    <description>Product Service for E-Commerce Application</description>
+    <name>OrderService</name>
+    <description>Order Service for E-Commerce Application</description>
 
 
     <!-- ========================================================= -->
-    <!-- Java Configuration                                        -->
+    <!-- Java / Spring Cloud Configuration                         -->
     <!-- ========================================================= -->
 
     <properties>
         <java.version>21</java.version>
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
     </properties>
+
+
+    <!-- ========================================================= -->
+    <!-- Spring Cloud BOM                                          -->
+    <!-- ========================================================= -->
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 
     <dependencies>
@@ -140,6 +158,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- 8. SERVICE DISCOVERY (EUREKA CLIENT)                  -->
+        <!-- ===================================================== -->
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
     </dependencies>

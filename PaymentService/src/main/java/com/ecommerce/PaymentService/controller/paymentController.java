@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Payment APIs", description = "APIs for creating and fetching payment details")
-public class paymentController {
+public class PaymentController {
 
     private final PaymentService paymentService;
 

@@ -1,6 +1,8 @@
 package com.ecommerce.OrderService.service;
 
+import com.ecommerce.OrderService.client.PaymentServiceClient;
 import com.ecommerce.OrderService.client.ProductServiceClient;
+import com.ecommerce.OrderService.client.dto.PaymentClientResponse;
 import com.ecommerce.OrderService.client.dto.ProductClientResponse;
 import com.ecommerce.OrderService.dto.CreateOrderRequestDTO;
 import com.ecommerce.OrderService.dto.OrderResponseDTO;
@@ -13,6 +15,7 @@ import com.ecommerce.OrderService.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,6 +28,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductServiceClient productServiceClient;
+    private final PaymentServiceClient paymentServiceClient;
 
     @Override
     public OrderResponseDTO getById(UUID id) {
@@ -41,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponseDTO createOrder(CreateOrderRequestDTO request) {
         log.info("Creating order for user id: {}", request.userId());
 
@@ -77,6 +82,32 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Calculated total order amount: {} for user id: {}", totalAmount, request.userId());
 
+        UUID orderId = UUID.randomUUID();
+
+        log.info("Processing payment for order id: {}, amount: {}", orderId, totalAmount);
+
+        PaymentClientResponse paymentResponse = paymentServiceClient.processPayment(
+                orderId, request.userId(), totalAmount
+        );
+
+        log.info("Payment response received. orderId: {}, status: {}", orderId, paymentResponse.status());
+
+        OrderStatus finalStatus;
+
+        if ("SUCCESS".equals(paymentResponse.status())) {
+            finalStatus = OrderStatus.CONFIRMED;
+            log.info("Payment succeeded for order id: {}", orderId);
+        } else {
+            finalStatus = OrderStatus.FAILED;
+            log.warn("Payment failed for order id: {}. Restoring stock.", orderId);
+
+            items.forEach(item -> {
+                log.info("Restoring stock for product id: {}, quantity: {}",
+                        item.getProductId(), item.getQuantity());
+                productServiceClient.restoreStock(item.getProductId(), item.getQuantity());
+            });
+        }
+
         Order order = Order.builder()
                 .userId(request.userId())
                 .status(OrderStatus.PENDING)
@@ -86,11 +117,32 @@ public class OrderServiceImpl implements OrderService {
 
         items.forEach(item -> item.setOrder(order));
 
-        Order saved = orderRepository.save(order);
+        Order saved = orderRepository.save(order);   // id generated here, real INSERT
+        log.info("Order persisted as PENDING. orderId: {}", saved.getId());
 
-        log.info("Order created successfully. orderId: {}, userId: {}, totalAmount: {}",
-                saved.getId(), saved.getUserId(), saved.getTotalAmount());
+        log.info("Processing payment for order id: {}, amount: {}", saved.getId(), totalAmount);
+        PaymentClientResponse paymentResponse1 = paymentServiceClient.processPayment(
+                saved.getId(), request.userId(), totalAmount
+        );
+        log.info("Payment response received. orderId: {}, status: {}", saved.getId(), paymentResponse.status());
 
-        return OrderMapper.toResponse(saved);
+        if ("SUCCESS".equals(paymentResponse1.status())) {
+            saved.setStatus(OrderStatus.CONFIRMED);
+            log.info("Payment succeeded for order id: {}", saved.getId());
+        } else {
+            saved.setStatus(OrderStatus.FAILED);
+            log.warn("Payment failed for order id: {}. Restoring stock.", saved.getId());
+
+            items.forEach(item -> {
+                log.info("Restoring stock for product id: {}, quantity: {}",
+                        item.getProductId(), item.getQuantity());
+                productServiceClient.restoreStock(item.getProductId(), item.getQuantity());
+            });
+        }
+
+        Order updated = orderRepository.save(saved);  // now a normal UPDATE, id already exists — no ambiguity
+        log.info("Order finalized. orderId: {}, status: {}", updated.getId(), updated.getStatus());
+
+        return OrderMapper.toResponse(updated);
     }
 }

@@ -129,4 +129,13 @@ public class ProductServiceImpl implements ProductService {
                 "Insufficient stock for product " + productId
         );
     }
+    @Override
+    @Transactional
+    public void increaseStock(UUID productId, int quantity) {
+        int updatedRows = productRepository.increaseStock(productId, quantity);
+
+        if (updatedRows == 0) {
+            throw new ProductNotFoundException("Product does not exist");
+        }
+    }
 }

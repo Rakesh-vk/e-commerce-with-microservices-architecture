@@ -134,4 +134,12 @@ public class ProductController {
         log.info("Stock decreased successfully for product id: {}", id);
         return ResponseEntity.noContent().build();
     }
+    @PatchMapping("/{id}/stock/restore")
+    public ResponseEntity<Void> increaseStock(
+            @PathVariable UUID id,
+            @Valid @RequestBody StockUpdateRequestDTO request) {
+
+        productServiceImpl.increaseStock(id, request.quantity());
+        return ResponseEntity.noContent().build();
+    }
 }

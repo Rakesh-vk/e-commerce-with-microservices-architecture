@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface ProductService {
     ProductResponseDTO updateProduct(ProductUpdateRequestDTO requestDTO);
     void decreaseStock(UUID productId, int quantity);
+    void increaseStock(UUID productId, int quantity);
     public List<ProductResponseDTO> getAllProduct();
     public List<Product> getAllProductByCategory(ProductCategory category);
     public ProductResponseDTO getProductById(UUID id);

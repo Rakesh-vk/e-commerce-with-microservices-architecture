@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "orders")
-public class Order {
+public class Order  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -48,4 +49,6 @@ public class Order {
     )
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();
+
+
 }

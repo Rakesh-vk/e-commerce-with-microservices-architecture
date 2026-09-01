@@ -30,12 +30,30 @@
 
 
     <!-- ========================================================= -->
-    <!-- Java Configuration                                        -->
+    <!-- Java / Spring Cloud Configuration                         -->
     <!-- ========================================================= -->
 
     <properties>
         <java.version>21</java.version>
+        <spring-cloud.version>2025.1.2</spring-cloud.version>
     </properties>
+
+
+    <!-- ========================================================= -->
+    <!-- Spring Cloud BOM                                          -->
+    <!-- ========================================================= -->
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 
     <dependencies>
@@ -155,7 +173,17 @@
 
 
         <!-- ===================================================== -->
-        <!-- 10. TESTING                                            -->
+        <!-- 10. SERVICE DISCOVERY (EUREKA CLIENT)                 -->
+        <!-- ===================================================== -->
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+
+
+        <!-- ===================================================== -->
+        <!-- 11. TESTING                                            -->
         <!-- ===================================================== -->
 
         <dependency>

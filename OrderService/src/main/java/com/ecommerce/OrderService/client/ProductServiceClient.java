@@ -59,4 +59,17 @@ public class ProductServiceClient {
             );
         }
     }
+
+    public void restoreStock(UUID productId, int quantity) {
+        try {
+            productServiceRestClient.patch()
+                    .uri("/api/products/{id}/stock/restore", productId)
+                    .body(new StockUpdateRequestDTO(quantity))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (HttpClientErrorException.NotFound ex) {
+            log.error("Failed to restore stock — product not found: {}", productId);
+            // don't rethrow — this runs during failure cleanup, shouldn't mask the original payment failure
+        }
+    }
 }

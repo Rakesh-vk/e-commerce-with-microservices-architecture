@@ -24,4 +24,14 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             @Param("productId") UUID productId,
             @Param("quantity") int quantity
     );
+    @Modifying
+    @Query("""
+    UPDATE Product p
+    SET p.stockQty = p.stockQty + :quantity
+    WHERE p.id = :productId
+""")
+    int increaseStock(
+            @Param("productId") UUID productId,
+            @Param("quantity") int quantity
+    );
 }
