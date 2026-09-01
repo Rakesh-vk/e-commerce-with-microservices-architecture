@@ -11,6 +11,7 @@ import com.ecommerce.UserService.repository.UserRepository;
 import com.ecommerce.UserService.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +21,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse register(UserRegisterRequest userRegisterRequest) {
@@ -34,7 +36,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setEmail(userRegisterRequest.getEmail());
         user.setUsername(userRegisterRequest.getUsername());
-        user.setPasswordHash(userRegisterRequest.getPasswordHash());
+        user.setPasswordHash(passwordEncoder.encode(userRegisterRequest.getPasswordHash()));
 
         User saved = userRepository.save(user);
 
@@ -51,6 +53,12 @@ public class UserServiceImpl implements UserService {
                     log.warn("Login failed. User not found with email: {}", request.getEmail());
                     return new BadCredentialsException("Invalid email or password");
                 });
+        if (!passwordEncoder.matches(
+                request.getPassword(),
+                user.getPasswordHash()
+        )) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
 
         String token = jwtTokenProvider.generateToken(user);
 
