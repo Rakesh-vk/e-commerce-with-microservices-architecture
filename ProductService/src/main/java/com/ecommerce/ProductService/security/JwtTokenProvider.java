@@ -1,15 +1,17 @@
-package com.ecommerce.UserService.security;
+package com.ecommerce.ProductService.security;
 
-import com.ecommerce.UserService.entity.User;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
+import java.util.Arrays;
 
+@Slf4j
 @Configuration
 public class JwtTokenProvider {
     private final SecretKey key;
@@ -19,23 +21,14 @@ public class JwtTokenProvider {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration-ms}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        log.debug(Arrays.toString(secret.getBytes()));
+
         this.expirationMs = expirationMs;
-    }
-
-    public String generateToken(User user) {
-        Date now = new Date();
-        Date expire = new Date(now.getTime() + expirationMs);
-
-        return Jwts.builder()
-                .subject(user.getId().toString())
-                .expiration(expire)
-                .issuedAt(now)
-                .claim("role", user.getRole().name())
-                .claim("email",user.getEmail())
-                .signWith(key)
-                .compact();
+        log.debug(String.valueOf(this.expirationMs));
     }
     public Claims validateToken(String token) {
+        log.debug(String.valueOf(this.key));
+        log.debug(String.valueOf(this.expirationMs));
         return Jwts.parser()
                 .verifyWith(key)
                 .build()
