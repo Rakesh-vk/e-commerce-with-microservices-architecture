@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -85,5 +86,12 @@ public class UserController {
         log.info("Secured test endpoint accessed successfully");
 
         return ResponseEntity.ok("secured");
+    }
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        log.info("Fetching all users");
+        List<UserResponse> users = userServiceImpl.getAllUsers();
+        log.info("Fetched {} users", users.size());
+        return ResponseEntity.ok(users);
     }
 }

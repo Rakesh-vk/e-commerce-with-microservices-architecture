@@ -11,13 +11,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -47,7 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElseThrow(() -> new UsernameNotFoundException(
                             "User not found"
                     ));
+            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRole().name()));
 
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(user, null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(authToken);
 
         }
         catch (Exception ex){

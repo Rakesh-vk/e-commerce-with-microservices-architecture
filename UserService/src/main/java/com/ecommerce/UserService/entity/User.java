@@ -29,4 +29,7 @@ public class User {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     LocalDateTime createdAt;// Instant
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    Role role;
 }

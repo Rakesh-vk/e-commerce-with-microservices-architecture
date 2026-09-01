@@ -3,6 +3,7 @@ package com.ecommerce.UserService.service;
 import com.ecommerce.UserService.dto.LoginRequest;
 import com.ecommerce.UserService.dto.UserRegisterRequest;
 import com.ecommerce.UserService.dto.UserResponse;
+import com.ecommerce.UserService.entity.Role;
 import com.ecommerce.UserService.entity.User;
 import com.ecommerce.UserService.exception.BadCredentialsException;
 import com.ecommerce.UserService.exception.DuplicateEmailException;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setEmail(userRegisterRequest.getEmail());
         user.setUsername(userRegisterRequest.getUsername());
+        user.setRole(Role.ROLE_USER);
         user.setPasswordHash(passwordEncoder.encode(userRegisterRequest.getPasswordHash()));
 
         User saved = userRepository.save(user);
@@ -64,5 +68,11 @@ public class UserServiceImpl implements UserService {
 
         log.info("Login successful for user id: {}, email: {}", user.getId(), user.getEmail());
         return token;
+    }
+    @Override
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(UserMapper::toResponse)
+                .toList();
     }
 }
