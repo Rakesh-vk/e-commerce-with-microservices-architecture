@@ -23,7 +23,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
                 HttpStatus.UNAUTHORIZED.value(),
-                "Authentication required. Please provide a valid token.",
+                "Authentication required. Please provide a valid token.  UserService",
                 LocalDateTime.now()
         );
 

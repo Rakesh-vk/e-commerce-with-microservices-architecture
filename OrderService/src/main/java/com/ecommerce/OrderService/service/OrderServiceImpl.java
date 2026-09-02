@@ -82,32 +82,6 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Calculated total order amount: {} for user id: {}", totalAmount, request.userId());
 
-        UUID orderId = UUID.randomUUID();
-
-        log.info("Processing payment for order id: {}, amount: {}", orderId, totalAmount);
-
-        PaymentClientResponse paymentResponse = paymentServiceClient.processPayment(
-                orderId, request.userId(), totalAmount
-        );
-
-        log.info("Payment response received. orderId: {}, status: {}", orderId, paymentResponse.status());
-
-        OrderStatus finalStatus;
-
-        if ("SUCCESS".equals(paymentResponse.status())) {
-            finalStatus = OrderStatus.CONFIRMED;
-            log.info("Payment succeeded for order id: {}", orderId);
-        } else {
-            finalStatus = OrderStatus.FAILED;
-            log.warn("Payment failed for order id: {}. Restoring stock.", orderId);
-
-            items.forEach(item -> {
-                log.info("Restoring stock for product id: {}, quantity: {}",
-                        item.getProductId(), item.getQuantity());
-                productServiceClient.restoreStock(item.getProductId(), item.getQuantity());
-            });
-        }
-
         Order order = Order.builder()
                 .userId(request.userId())
                 .status(OrderStatus.PENDING)
@@ -121,12 +95,12 @@ public class OrderServiceImpl implements OrderService {
         log.info("Order persisted as PENDING. orderId: {}", saved.getId());
 
         log.info("Processing payment for order id: {}, amount: {}", saved.getId(), totalAmount);
-        PaymentClientResponse paymentResponse1 = paymentServiceClient.processPayment(
+        PaymentClientResponse paymentResponse = paymentServiceClient.processPayment(
                 saved.getId(), request.userId(), totalAmount
         );
         log.info("Payment response received. orderId: {}, status: {}", saved.getId(), paymentResponse.status());
 
-        if ("SUCCESS".equals(paymentResponse1.status())) {
+        if ("SUCCESS".equals(paymentResponse.status())) {
             saved.setStatus(OrderStatus.CONFIRMED);
             log.info("Payment succeeded for order id: {}", saved.getId());
         } else {

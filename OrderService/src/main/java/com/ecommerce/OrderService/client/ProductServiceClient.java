@@ -23,7 +23,6 @@ public class ProductServiceClient {
         log.debug("Entered ProductServiceClient");
 
         try {
-            log.debug("krakesh entered try");
 
             ProductClientResponse response = productServiceRestClient.get()
                     .uri("/api/products/{id}", productId)

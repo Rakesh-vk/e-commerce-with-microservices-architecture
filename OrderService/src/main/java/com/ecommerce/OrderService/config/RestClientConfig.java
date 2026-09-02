@@ -4,7 +4,12 @@ import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 public class RestClientConfig {
@@ -34,6 +39,8 @@ public class RestClientConfig {
 
     /**
      * RestClient for ProductService.
+     * Forwards the caller's Authorization header so downstream
+     * services can authenticate the request.
      */
     @Bean
     public RestClient productServiceRestClient(
@@ -41,11 +48,17 @@ public class RestClientConfig {
 
         return builder
                 .baseUrl("http://PRODUCTSERVICE")
+                .requestInterceptor((request, body, execution) -> {
+                    forwardAuthHeader(request.getHeaders());
+                    return execution.execute(request, body);
+                })
                 .build();
     }
 
     /**
      * RestClient for PaymentService.
+     * Forwards the caller's Authorization header so downstream
+     * services can authenticate the request.
      */
     @Bean
     public RestClient paymentServiceRestClient(
@@ -53,6 +66,32 @@ public class RestClientConfig {
 
         return builder
                 .baseUrl("http://PAYMENTSERVICE")
+                .requestInterceptor((request, body, execution) -> {
+                    forwardAuthHeader(request.getHeaders());
+                    return execution.execute(request, body);
+                })
                 .build();
+    }
+
+    /**
+     * Copies the Authorization header from the current inbound
+     * request (the one OrderService is currently handling) onto
+     * the outgoing request headers, so downstream service-to-service
+     * calls stay authenticated as the original caller.
+     */
+    private void forwardAuthHeader(HttpHeaders outgoingHeaders) {
+        ServletRequestAttributes attrs =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        if (attrs == null) {
+            return;
+        }
+
+        HttpServletRequest currentRequest = attrs.getRequest();
+        String authHeader = currentRequest.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader != null) {
+            outgoingHeaders.set(HttpHeaders.AUTHORIZATION, authHeader);
+        }
     }
 }

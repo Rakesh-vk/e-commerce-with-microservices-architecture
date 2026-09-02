@@ -23,7 +23,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
                 HttpStatus.FORBIDDEN.value(),
-                "You do not have permission to access this resource",
+                "You do not have permission to access this resource. ProductService",
                 LocalDateTime.now()
         );
 

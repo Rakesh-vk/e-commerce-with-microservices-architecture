@@ -1,5 +1,4 @@
-package com.ecommerce.ProductService.security;
-
+package com.ecommerce.OrderService.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import javax.crypto.SecretKey;
-import java.util.Arrays;
 
 @Slf4j
 @Configuration

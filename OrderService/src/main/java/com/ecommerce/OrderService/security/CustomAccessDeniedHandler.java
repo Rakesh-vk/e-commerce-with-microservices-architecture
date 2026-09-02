@@ -1,6 +1,6 @@
-package com.ecommerce.UserService.security;
+package com.ecommerce.OrderService.security;
 
-import com.ecommerce.UserService.dto.ErrorResponseDTO;
+import com.ecommerce.OrderService.dto.ErrorResponseDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
                 HttpStatus.FORBIDDEN.value(),
-                "You do not have permission to access this resource. UserService",
+                "You do not have permission to access this resource. OrderService",
                 LocalDateTime.now()
         );
 

@@ -34,7 +34,7 @@ public class SecurityConfig {
                                 "/v3/api-docs/**", "/userservice/register")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ROLE_ADMIN")
-                        .anyRequest().authenticated())
+                )
                 .exceptionHandling(ex -> ex
                 .accessDeniedHandler(customAccessDeniedHandler)
                 .authenticationEntryPoint(customAuthenticationEntryPoint))

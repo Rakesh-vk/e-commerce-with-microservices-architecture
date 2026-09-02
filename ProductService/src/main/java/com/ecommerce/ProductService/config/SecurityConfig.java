@@ -41,12 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/products")
                         .hasAuthority("ROLE_ADMIN")
 
-                        // Logged-in USER or ADMIN can modify products
-                        .requestMatchers(HttpMethod.PATCH, "/api/products")
-                        .authenticated()
-                        // Logged-in USER or ADMIN can delete products
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**")
-                        .authenticated()
+
 
                         // Everything else requires authentication
                         .anyRequest().authenticated()
