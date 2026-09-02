@@ -1,4 +1,4 @@
-package com.ecommerce.OrderService.security;
+package com.ecommerce.NotificationService.security;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -16,7 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -35,26 +34,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        log.debug("krakesh authHeader {}", authHeader);
 
         String token = authHeader.substring(7);
 
         try {
-            log.debug("krakesh inside try");
-
             Claims claims = jwtTokenProvider.validateToken(token);
             String userId = claims.getSubject();
-            String email = claims.get("email", String.class);
             String role = claims.get("role", String.class);
-            log.debug("krakesh role {}", role);
-            request.setAttribute("customerEmail", email);
-            log.debug("krakesh user id  {}", userId);
 
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(userId, null, authorities);
-            log.debug("krakesh authToken {}",authToken);
+
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
         } catch (Exception ex) {

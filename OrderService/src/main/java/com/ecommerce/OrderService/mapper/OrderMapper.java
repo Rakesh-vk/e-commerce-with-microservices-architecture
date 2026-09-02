@@ -1,35 +1,16 @@
 package com.ecommerce.OrderService.mapper;
 
-import com.ecommerce.OrderService.dto.CreateOrderRequestDTO;
 import com.ecommerce.OrderService.dto.OrderItemRequestDTO;
 import com.ecommerce.OrderService.dto.OrderItemResponseDTO;
 import com.ecommerce.OrderService.dto.OrderResponseDTO;
 import com.ecommerce.OrderService.entity.Order;
 import com.ecommerce.OrderService.entity.OrderItem;
-import com.ecommerce.OrderService.entity.OrderStatus;
 
 import java.util.List;
 
 public class OrderMapper {
 
     private OrderMapper() {
-    }
-
-    public static Order toEntity(CreateOrderRequestDTO request) {
-        Order order = Order.builder()
-                .userId(request.userId())
-                .status(OrderStatus.PENDING)
-                .items(
-                        request.items()
-                                .stream()
-                                .map(OrderMapper::toEntity)
-                                .toList()
-                )
-                .build();
-
-        order.getItems().forEach(item -> item.setOrder(order));
-
-        return order;
     }
 
     public static OrderItem toEntity(OrderItemRequestDTO request) {
