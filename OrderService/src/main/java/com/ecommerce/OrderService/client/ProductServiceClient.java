@@ -4,6 +4,8 @@ import com.ecommerce.OrderService.client.dto.ProductClientResponse;
 import com.ecommerce.OrderService.client.dto.StockUpdateRequestDTO;
 import com.ecommerce.OrderService.exception.InsufficientStockException;
 import com.ecommerce.OrderService.exception.ProductNotFoundException;
+import com.ecommerce.OrderService.exception.ServiceUnavailableException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,18 +21,17 @@ public class ProductServiceClient {
 
     private final RestClient productServiceRestClient;
 
+    @CircuitBreaker(name = "productService", fallbackMethod = "getProductFallback")
     public ProductClientResponse getProduct(UUID productId) {
         log.debug("Entered ProductServiceClient");
 
         try {
-
             ProductClientResponse response = productServiceRestClient.get()
                     .uri("/api/products/{id}", productId)
                     .retrieve()
                     .body(ProductClientResponse.class);
 
             log.debug("Product response: {}", response);
-
             return response;
 
         } catch (HttpClientErrorException.NotFound ex) {
@@ -70,5 +71,10 @@ public class ProductServiceClient {
             log.error("Failed to restore stock — product not found: {}", productId);
             // don't rethrow — this runs during failure cleanup, shouldn't mask the original payment failure
         }
+    }
+
+    private ProductClientResponse getProductFallback(UUID productId, Throwable t) {
+        log.error("ProductService unavailable for product {}: {}", productId, t.getMessage());
+        throw new ServiceUnavailableException("Product service is currently unavailable");
     }
 }
