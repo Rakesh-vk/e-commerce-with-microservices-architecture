@@ -2,6 +2,7 @@ package com.ecommerce.OrderService.dto;
 
 import com.ecommerce.OrderService.entity.OrderStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public record OrderResponseDTO(
                 description = "Date and time when the order was created",
                 example = "2026-08-31T21:30:00"
         )
+
         LocalDateTime createdAt,
 
         @Schema(description = "List of items included in the order")

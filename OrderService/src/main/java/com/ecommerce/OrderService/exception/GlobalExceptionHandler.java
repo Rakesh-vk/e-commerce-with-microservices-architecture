@@ -30,6 +30,22 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(error);
     }
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleServiceUnavailable(
+            ServiceUnavailableException ex) {
+        log.warn("Service unavailable : {}", ex.getMessage());
+
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(error);
+    }
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> ProductNotFoundExceptionHandler(
             ProductNotFoundException ex) {

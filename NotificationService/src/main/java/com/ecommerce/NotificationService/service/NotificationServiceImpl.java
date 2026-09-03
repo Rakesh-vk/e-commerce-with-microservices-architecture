@@ -64,7 +64,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private String buildOrderCreatedBody(OrderCreatedEvent event) {
         return "Hi,\n\n"
-                + "We've received your order " + event.orderId() + " "
+                + "We've received your order " + event.productName() + " "
                 + "for " + event.orderAmount() + ".\n\n"
                 + "Thanks for shopping with us!";
     }

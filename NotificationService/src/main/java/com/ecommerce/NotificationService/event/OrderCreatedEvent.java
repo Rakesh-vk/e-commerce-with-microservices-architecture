@@ -8,6 +8,7 @@ public record OrderCreatedEvent(
         UUID eventId,
         UUID orderId,
         UUID userId,
+        String productName,
         String customerEmail,
         BigDecimal orderAmount,
         OrderStatus status,

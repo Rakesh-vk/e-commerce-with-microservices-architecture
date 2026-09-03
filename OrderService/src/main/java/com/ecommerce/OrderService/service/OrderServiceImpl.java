@@ -16,11 +16,13 @@ import com.ecommerce.OrderService.producer.OrderEventProducer;
 import com.ecommerce.OrderService.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
 
         if (!isAdmin && !order.getUserId().equals(requesterId)) {
             log.warn("User {} attempted to access order {} owned by {}", requesterId, id, order.getUserId());
-            throw new org.springframework.security.access.AccessDeniedException(
+            throw new AccessDeniedException(
                     "You do not have permission to access this order");
         }
 
@@ -56,8 +58,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponseDTO createOrder(CreateOrderRequestDTO request, UUID userId,String customerEmail) {
+    public OrderResponseDTO createOrder(CreateOrderRequestDTO request, UUID userId, String customerEmail) {
         log.info("Creating order for user id: {}", userId);
+        List<String> productNames = new ArrayList<>();
 
         List<OrderItem> items = request.items().stream()
                 .map(itemRequest -> {
@@ -65,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
 
                     ProductClientResponse product = productServiceClient.getProduct(itemRequest.productId());
 
+                    productNames.add(product.productName());
                     log.info("Product fetched successfully. productId: {}, price: {}",
                             product.id(), product.price());
 
@@ -86,6 +90,7 @@ public class OrderServiceImpl implements OrderService {
                 })
                 .toList();
 
+        String joinedProductNames = String.join(", ", productNames);
         BigDecimal totalAmount = items.stream()
                 .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -124,19 +129,20 @@ public class OrderServiceImpl implements OrderService {
             });
         }
 
-        Order updated = orderRepository.save(saved);  // now a normal UPDATE, id already exists — no ambiguity
+        Order updated = orderRepository.save(saved);// now a normal UPDATE, id already exists — no ambiguity
+        updated.setCreatedAt(LocalDateTime.now());
         log.info("Order finalized. orderId: {}, status: {}", updated.getId(), updated.getStatus());
         OrderCreatedEvent event = new OrderCreatedEvent(
                 UUID.randomUUID(),
                 updated.getId(),
                 updated.getUserId(),
+                joinedProductNames,
                 customerEmail,
                 updated.getTotalAmount(),
                 updated.getStatus(),
                 updated.getCreatedAt()
         );
 
-        orderEventProducer.publishOrderCreated(event);
         orderEventProducer.publishOrderCreated(event);
         return OrderMapper.toResponse(updated);
     }
