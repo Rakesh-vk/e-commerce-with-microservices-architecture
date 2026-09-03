@@ -1,108 +1,232 @@
 # E-Commerce Microservices Platform
 
-A backend-focused **E-Commerce application built with Java 21, Spring Boot 4, Spring Data JPA, PostgreSQL, Spring Security, JWT, REST clients, OpenAPI/Swagger, Docker Compose, and automated tests**.
+A backend-focused **E-Commerce microservices application** built with Java, Spring Boot, Spring Data JPA, PostgreSQL, Spring Security, JWT, REST clients, Apache Kafka, OpenAPI/Swagger, Eureka service discovery, Spring Cloud Gateway, Mailpit, Docker Compose, and automated tests.
 
-The project is intentionally split into independently deployable services to demonstrate practical microservices fundamentals: service boundaries, REST APIs, persistence, validation, authentication, inter-service communication, exception handling, DTO mapping, API documentation, observability, and testing.
+The project is structured as independently deployable services to demonstrate practical backend and microservices concepts including service boundaries, REST APIs, persistence, authentication, inter-service communication, asynchronous event-driven communication, notification delivery, validation, exception handling, DTO mapping, API documentation, observability, and testing.
 
 ---
 
 ## Architecture
 
 ```text
-                         ┌─────────────────────┐
-                         │       Client        │
-                         │  Swagger / Postman  │
-                         └──────────┬──────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              │                     │                     │
-              ▼                     ▼                     ▼
-       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-       │ UserService │       │ProductService│       │OrderService │
-       │    :8081    │       │    :8082    │       │    :8083    │
-       └──────┬──────┘       └──────┬──────┘       └──────┬──────┘
-              │                     │                     │
-              ▼                     ▼                     │
-       ┌─────────────┐       ┌─────────────┐              │
-       │  userdb     │       │  productdb  │◄─────────────┤
-       └─────────────┘       └─────────────┘              │
-                                                          │
+                              ┌─────────────────────┐
+                              │       Client        │
+                              │  Swagger / Postman  │
+                              └──────────┬──────────┘
+                                         │
+                                         ▼
+                              ┌─────────────────────┐
+                              │     ApiGateway      │
+                              │        :8080        │
+                              └──────────┬──────────┘
+                                         │
+                     ┌───────────────────┼───────────────────┐
+                     │                   │                   │
+                     ▼                   ▼                   ▼
+              ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+              │ UserService  │     │ProductService│     │ OrderService│
+              │    :8081     │     │    :8082     │     │    :8083    │
+              └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+                     │                   │                   │
+                     ▼                   ▼                   │
+                ┌─────────┐         ┌───────────┐            │
+                │ userdb  │         │ productdb │◄───────────┤
+                └─────────┘         └───────────┘            │
+                                                             │
                                                    REST / RestClient
-                                                          │
-                                                          ▼
-                                                   ┌─────────────┐
-                                                   │PaymentService│
-                                                   │    :8084    │
-                                                   └──────┬──────┘
-                                                          │
-                                                          ▼
-                                                   ┌─────────────┐
-                                                   │  paymentdb  │
-                                                   └─────────────┘
+                                                             │
+                                                             ▼
+                                                      ┌─────────────┐
+                                                      │PaymentService│
+                                                      │    :8084    │
+                                                      └──────┬──────┘
+                                                             │
+                                                             ▼
+                                                        ┌─────────┐
+                                                        │paymentdb │
+                                                        └─────────┘
 
                          OrderService
                               │
+                              │ OrderCreatedEvent
                               ▼
-                         ┌───────────┐
-                         │ orderdb   │
-                         └───────────┘
+                       ┌────────────────┐
+                       │ Apache Kafka    │
+                       │ order.created   │
+                       └───────┬────────┘
+                               │
+                               ▼
+                       ┌──────────────────┐
+                       │NotificationService│
+                       │      :8085       │
+                       └────────┬─────────┘
+                                │
+                     ┌──────────┴──────────┐
+                     ▼                     ▼
+              notification_db          Mailpit
+                                      SMTP :1025
+                                      UI :8025
+
+
+                    ┌──────────────────────┐
+                    │   Discovery Service  │
+                    │        :8761         │
+                    │       Eureka         │
+                    └──────────────────────┘
 ```
 
-### Services
+---
+
+## Services
 
 | Service | Port | Responsibility | Database |
 |---|---:|---|---|
-| **UserService** | `8081` | Registration, login, JWT authentication, secured endpoint | `userdb` |
+| **ApiGateway** | `8080` | API entry point and dynamic service discovery/routing | — |
+| **UserService** | `8081` | Registration, login, JWT authentication, user APIs | `userdb` |
 | **ProductService** | `8082` | Product CRUD and stock management | `productdb` |
-| **OrderService** | `8083` | Order creation, order retrieval, product/stock integration | `orderdb` |
+| **OrderService** | `8083` | Order creation/retrieval and product/payment integration | `orderdb` |
 | **PaymentService** | `8084` | Payment creation and payment retrieval | `paymentdb` |
+| **NotificationService** | `8085` | Consumes order events and creates/delivers notifications | `notification_db` |
+| **Discovery Service** | `8761` | Eureka service registry/discovery | — |
 
 Each service owns its persistence model rather than sharing JPA entities across services.
 
 ---
 
-## Key Technical Highlights
+# Technology Stack
 
-### 1. Microservice Separation
+- Java
+- Spring Boot
+- Spring Web MVC
+- Spring Data JPA
+- Hibernate
+- PostgreSQL
+- Spring Security
+- JWT / JJWT
+- Spring Cloud Netflix Eureka
+- Spring Cloud Gateway
+- Spring `RestClient`
+- Apache Kafka
+- Spring Kafka
+- Spring Mail
+- Mailpit
+- OpenAPI / Swagger UI
+- Spring Boot Actuator
+- Maven
+- JUnit
+- Mockito
+- MockMvc
+- Docker Compose
 
-The application is decomposed by business capability instead of building one large monolith:
+---
 
-- User management
-- Product/catalog management
-- Order management
-- Payment management
+# Architecture Patterns Demonstrated
 
-Each service has its own Spring Boot application, Maven build, configuration, controllers, services, repositories, DTOs, entities, and exception handling.
+The project demonstrates several important microservices patterns:
 
-### 2. REST API Design
+- Database-per-service
+- Synchronous REST communication
+- Asynchronous event-driven communication
+- Service discovery
+- API Gateway
+- JWT-based stateless authentication
+- DTO-based API contracts
+- Layered architecture
+- Global exception handling
+- Event consumers and producers
+- Notification provider abstraction
+- Local SMTP email testing
+- Health and actuator endpoints
+- Automated testing
+
+---
+
+# API Gateway
+
+`ApiGateway` runs on:
+
+```text
+http://localhost:8080
+```
+
+It uses Spring Cloud Gateway with Eureka service discovery.
+
+Dynamic discovery is enabled through:
+
+```properties
+spring.cloud.gateway.server.webflux.discovery.locator.enabled=true
+spring.cloud.gateway.server.webflux.discovery.locator.lower-case-service-id=true
+```
+
+The gateway can discover registered services through Eureka instead of requiring every service route to be hard-coded.
+
+---
+
+# Service Discovery
+
+The Eureka Discovery Service runs on:
+
+```text
+http://localhost:8761
+```
+
+Services register themselves with Eureka using:
+
+```text
+eureka.client.service-url.defaultZone=http://localhost:8761/eureka/
+```
+
+The current architecture uses Eureka for service registration/discovery.
+
+---
+
+# REST API Design
 
 The services expose REST endpoints using Spring Web MVC.
 
-Examples:
+## UserService
 
 ```text
 POST   /api/users/register
 POST   /api/users/login
 GET    /api/users/test
+GET    /api/users
+```
 
+## ProductService
+
+```text
 GET    /api/products
 GET    /api/products/{id}
 POST   /api/products
 PATCH  /api/products
 PATCH  /api/products/{id}/stock
+PATCH  /api/products/{id}/stock/restore
+```
 
+## OrderService
+
+```text
 POST   /api/orders
 GET    /api/orders/{id}
+```
 
+## PaymentService
+
+```text
 POST   /api/payment
 GET    /api/payment/{id}
 ```
+
+## NotificationService
+
+Notification APIs are exposed through `NotificationController`. The service also receives asynchronous order events through Kafka.
 
 HTTP status codes are used to represent successful operations and common error conditions such as `400`, `401`, `404`, `409`, and `500`.
 
 ---
 
-## Authentication & Security
+# Authentication & Security
 
 `UserService` implements stateless authentication using:
 
@@ -114,29 +238,40 @@ HTTP status codes are used to represent successful operations and common error c
 - Secured endpoints
 - Public authentication endpoints
 
-The security configuration allows unauthenticated access to:
+Authentication endpoints include:
 
 ```text
 /api/users/register
 /api/users/login
-/swagger-ui/**
-/swagger-ui.html
-/v3/api-docs/**
 ```
 
-Other endpoints require authentication.
+Swagger/OpenAPI endpoints are also configured for public access where required.
 
-JWT configuration is externalized through environment variables rather than hard-coding secrets into Java source code.
+JWT configuration is externalized through environment variables rather than hard-coded secrets.
+
+JWT claims currently include information such as:
+
+```text
+sub  -> user ID
+role -> user role
+email -> user email
+```
+
+Other services validate the JWT using their configured JWT provider/filter.
 
 ---
 
-## Inter-Service Communication
+# Inter-Service Communication
+
+The project uses **two communication styles**.
+
+## 1. Synchronous REST Communication
 
 `OrderService` communicates with other services through Spring's `RestClient`.
 
 ### Product integration
 
-Order creation:
+During order processing:
 
 ```text
 OrderService
@@ -146,7 +281,7 @@ OrderService
     └── PATCH ProductService /api/products/{id}/stock
 ```
 
-The client maps remote HTTP errors into domain-specific exceptions such as:
+The client layer maps remote HTTP errors into domain-specific exceptions such as:
 
 - `ProductNotFoundException`
 - `InsufficientStockException`
@@ -161,11 +296,218 @@ This keeps HTTP communication details isolated inside the client layer.
 POST /api/payment
 ```
 
-The client maps the request/response into dedicated DTOs rather than sharing payment-service entities.
+The client uses dedicated request/response DTOs rather than sharing PaymentService entities.
 
 ---
 
-## Layered Architecture
+# Apache Kafka
+
+Apache Kafka is used for **asynchronous communication** between OrderService and NotificationService.
+
+Kafka is configured separately using:
+
+```text
+docker-compose-kafka.yml
+```
+
+The Kafka broker is exposed on:
+
+```text
+localhost:9092
+```
+
+## Event Flow
+
+When an order is created:
+
+```text
+OrderService
+     │
+     │ publish OrderCreatedEvent
+     ▼
+Kafka
+     │
+     │ topic: order.created
+     ▼
+NotificationService
+     │
+     ├── Save notification
+     │
+     └── Deliver email
+```
+
+The producer publishes to:
+
+```text
+order.created
+```
+
+using the order ID as the Kafka message key.
+
+The NotificationService consumes the same topic using:
+
+```text
+notification-service
+```
+
+as its consumer group.
+
+---
+
+# OrderCreatedEvent
+
+The event currently contains:
+
+```text
+eventId
+orderId
+userId
+customerEmail
+orderAmount
+status
+createdAt
+```
+
+Example structure:
+
+```java
+public record OrderCreatedEvent(
+        UUID eventId,
+        UUID orderId,
+        UUID userId,
+        String customerEmail,
+        BigDecimal orderAmount,
+        OrderStatus status,
+        LocalDateTime createdAt
+) {}
+```
+
+The NotificationService maintains its own local event representation rather than depending on OrderService Java classes.
+
+Kafka JSON type headers are disabled on the consumer so the consumer does not depend on the producer's Java fully-qualified class name.
+
+The NotificationService is configured with:
+
+```properties
+spring.kafka.consumer.properties[spring.json.value.default.type]=com.ecommerce.NotificationService.event.OrderCreatedEvent
+spring.kafka.consumer.properties[spring.json.use.type.headers]=false
+spring.kafka.consumer.properties[spring.json.trusted.packages]=com.ecommerce.NotificationService.event
+```
+
+This keeps the consumer's Java model local to NotificationService.
+
+---
+
+# NotificationService
+
+`NotificationService` runs on:
+
+```text
+http://localhost:8085
+```
+
+Its responsibilities include:
+
+1. Consume `OrderCreatedEvent` from Kafka.
+2. Create a notification record.
+3. Persist notification state.
+4. Dispatch the notification through a provider.
+5. Send email through SMTP.
+6. Record delivery failures.
+
+The email implementation is abstracted behind:
+
+```text
+NotificationProvider
+        │
+        ▼
+EmailNotificationProvider
+```
+
+This makes it possible to add other notification channels/providers later.
+
+---
+
+# Mailpit
+
+For local development, the project uses **Mailpit** instead of Gmail SMTP.
+
+Mailpit is a local SMTP server and web-based email testing inbox.
+
+It prevents development emails from being sent to real users.
+
+## Mailpit Ports
+
+```text
+SMTP: localhost:1025
+Web UI: http://localhost:8025
+```
+
+Start Mailpit:
+
+```bash
+mailpit
+```
+
+Stop Mailpit:
+
+```text
+Ctrl + C
+```
+
+Run Mailpit in the background:
+
+```bash
+mailpit > /tmp/mailpit.log 2>&1 &
+```
+
+Stop the background process:
+
+```bash
+pkill mailpit
+```
+
+Open the Mailpit inbox:
+
+```text
+http://localhost:8025
+```
+
+## Spring Mail Configuration
+
+NotificationService uses:
+
+```properties
+spring.mail.host=localhost
+spring.mail.port=1025
+spring.mail.username=
+spring.mail.password=
+
+spring.mail.properties.mail.smtp.auth=false
+spring.mail.properties.mail.smtp.starttls.enable=false
+```
+
+The email flow is therefore:
+
+```text
+OrderService
+      ↓
+Kafka
+      ↓
+NotificationService
+      ↓
+EmailNotificationProvider
+      ↓
+Mailpit SMTP :1025
+      ↓
+Mailpit Web UI :8025
+```
+
+For production, Mailpit should be replaced with a real transactional email provider.
+
+---
+
+# Layered Architecture
 
 The services follow a conventional layered design:
 
@@ -190,6 +532,14 @@ Client
  ↕
 Remote Service
 
+Producer / Consumer
+ ↕
+Kafka
+
+Provider
+ ↕
+External Delivery System
+
 Exception Handler
  ↕
 Consistent API Errors
@@ -199,11 +549,11 @@ This keeps responsibilities separated and makes individual components easier to 
 
 ---
 
-## DTO Mapping
+# DTO Mapping
 
 The project avoids exposing JPA entities directly from controller APIs.
 
-Instead:
+The general flow is:
 
 ```text
 Request DTO
@@ -232,14 +582,15 @@ Examples include:
 - `PaymentResponseDTO`
 - `UserRegisterRequest`
 - `UserResponse`
+- `NotificationResponseDTO`
 
-This demonstrates separation between persistence models and API contracts.
+DTOs provide an explicit API boundary between persistence models and external clients.
 
 ---
 
-## Validation & Error Handling
+# Validation & Error Handling
 
-Request validation is implemented using Jakarta Bean Validation.
+Request validation uses Jakarta Bean Validation.
 
 Examples include:
 
@@ -258,9 +609,9 @@ Controllers use:
 @RequestBody
 ```
 
-Domain-specific exceptions are used instead of leaking low-level persistence or HTTP exceptions through the application.
+Domain-specific exceptions prevent low-level persistence or HTTP implementation details from leaking through the application.
 
-Examples:
+Examples include:
 
 ```text
 UserService
@@ -279,13 +630,16 @@ OrderService
 PaymentService
 ├── PaymentNotFoundException
 └── PaymentFailedException
+
+NotificationService
+└── NotificationDeliveryException
 ```
 
-Global exception handlers translate these exceptions into API responses.
+Global exception handlers translate exceptions into API responses.
 
 ---
 
-## Persistence
+# Persistence
 
 Persistence is implemented with:
 
@@ -296,22 +650,23 @@ Persistence is implemented with:
 - Entity relationships
 - Repository abstractions
 
-Each service uses a separate database:
+Each business service owns its own database:
 
 ```text
 userdb
 productdb
 orderdb
 paymentdb
+notification_db
 ```
 
-This reflects the **database-per-service** approach and avoids tightly coupling services through shared persistence.
+This follows the **database-per-service** approach and avoids tightly coupling services through shared persistence.
 
 ---
 
-## API Documentation
+# API Documentation
 
-OpenAPI/Swagger annotations are used directly on the controllers.
+OpenAPI/Swagger annotations are used directly on controllers.
 
 Examples include:
 
@@ -322,7 +677,7 @@ Examples include:
 @Tag
 ```
 
-### Swagger UI
+## Swagger UI
 
 | Service | Swagger UI |
 |---|---|
@@ -330,6 +685,7 @@ Examples include:
 | ProductService | `http://localhost:8082/swagger-ui/index.html` |
 | OrderService | `http://localhost:8083/swagger-ui/index.html` |
 | PaymentService | `http://localhost:8084/swagger-ui/index.html` |
+| NotificationService | `http://localhost:8085/swagger-ui/index.html` |
 
 OpenAPI JSON is available at:
 
@@ -337,27 +693,46 @@ OpenAPI JSON is available at:
 http://localhost:<PORT>/v3/api-docs
 ```
 
-For `UserService`, JWT bearer authentication is also represented in the OpenAPI configuration.
+The UserService OpenAPI configuration includes JWT bearer authentication.
 
 ---
 
-## Testing
+# Actuator & Observability
+
+Spring Boot Actuator is included in the services where configured.
+
+Actuator endpoints can be used for:
+
+- Health checks
+- Application information
+- Mappings
+- Configuration inspection
+- Gateway information
+
+The current project also uses application logging for debugging and operational visibility.
+
+**Distributed tracing is a future improvement** and is not currently represented as a completed feature in this repository.
+
+---
+
+# Testing
 
 The project includes unit and controller/API-focused tests.
 
 Testing covers areas such as:
 
-### ProductService
+## ProductService
 
 - Product creation
 - Product retrieval
 - Product update
 - Product-not-found scenarios
 - Stock updates
+- Stock restoration
 - Insufficient-stock scenarios
 - Controller validation and HTTP responses
 
-### OrderService
+## OrderService
 
 - Order retrieval
 - Order-not-found handling
@@ -368,7 +743,7 @@ Testing covers areas such as:
 - Product/stock error mapping
 - Controller responses
 
-### PaymentService
+## PaymentService
 
 - Payment creation
 - Payment retrieval
@@ -377,7 +752,7 @@ Testing covers areas such as:
 - Mapper behavior
 - Controller validation
 
-### UserService
+## UserService
 
 - User registration
 - Duplicate email handling
@@ -386,6 +761,12 @@ Testing covers areas such as:
 - DTO mapping
 - Controller validation
 - Secured endpoint behavior
+
+## NotificationService
+
+- Spring context/application tests
+- Notification event consumption components
+- Notification persistence and delivery components
 
 Run all tests for an individual service from that service directory:
 
@@ -401,16 +782,18 @@ Or:
 
 ---
 
-## Local Development
+# Local Development
 
-### Prerequisites
+## Prerequisites
 
 Install:
 
-- Java 21
+- Java
 - Maven 3.9+
 - PostgreSQL 16+ OR Docker
-- IntelliJ IDEA / another Java IDE
+- Docker Desktop if running PostgreSQL/Kafka through Docker
+- Mailpit
+- IntelliJ IDEA or another Java IDE
 - Git
 
 Verify Java:
@@ -419,71 +802,22 @@ Verify Java:
 java -version
 ```
 
-Expected major version:
-
-```text
-21
-```
+The project source currently uses Java/Spring Boot versions defined in each service's `pom.xml`. Check the individual Maven configuration if your local Java version differs.
 
 ---
 
-## Database Setup with Docker
-
-The repository includes:
-
-```text
-docker-compose.yml
-```
-
-It starts PostgreSQL 16:
-
-```bash
-docker compose up -d
-```
-
-Check the container:
-
-```bash
-docker ps
-```
-
-Stop it:
-
-```bash
-docker compose down
-```
-
-Persistent PostgreSQL data is stored in the Docker volume:
-
-```text
-postgres_data
-```
-
-The application expects these databases:
-
-```text
-userdb
-productdb
-orderdb
-paymentdb
-```
-
-If they are not created automatically in your local PostgreSQL setup, create them before starting the services.
-
----
-
-## Environment Configuration
+# Environment Configuration
 
 Sensitive values should be supplied through environment variables.
 
-Required variables include:
+The repository `.env` currently defines:
 
 ```text
 DB_PASSWORD
 POSTGRES_DB
 POSTGRES_USER
-JWT_SECRET
 JWT_EXPIRATION_MS
+JWT_SECRET
 ```
 
 Example:
@@ -498,11 +832,21 @@ JWT_EXPIRATION_MS=86400000
 
 **Do not commit real passwords, JWT secrets, API keys, or other credentials to Git.**
 
-The repository currently contains a `.env` file in the project archive. Before publishing this project publicly, remove any real credentials from it and keep `.env` ignored by Git.
+Before publishing the repository publicly:
+
+1. Remove real credentials from `.env`.
+2. Keep `.env` ignored by Git.
+3. Provide a `.env.example` containing placeholder values.
 
 ---
 
-## Starting the Services
+# Database Setup with Docker
+
+The repository includes:
+
+```text
+docker-compose.yml
+```
 
 Start PostgreSQL:
 
@@ -510,9 +854,128 @@ Start PostgreSQL:
 docker compose up -d
 ```
 
-Then start each service from its own directory.
+Check the container:
 
-### UserService
+```bash
+docker ps
+```
+
+Stop PostgreSQL:
+
+```bash
+docker compose down
+```
+
+Persistent PostgreSQL data is stored in:
+
+```text
+postgres_data
+```
+
+The application expects these databases:
+
+```text
+userdb
+productdb
+orderdb
+paymentdb
+notification_db
+```
+
+If the databases are not created automatically in your local PostgreSQL setup, create them before starting the services.
+
+---
+
+# Kafka Setup with Docker
+
+Kafka has a separate Compose file:
+
+```text
+docker-compose-kafka.yml
+```
+
+Start Kafka:
+
+```bash
+docker compose -f docker-compose-kafka.yml up -d
+```
+
+Check Kafka:
+
+```bash
+docker ps
+```
+
+Stop Kafka:
+
+```bash
+docker compose -f docker-compose-kafka.yml down
+```
+
+Kafka is exposed on:
+
+```text
+localhost:9092
+```
+
+The configured topic used by the current order notification flow is:
+
+```text
+order.created
+```
+
+Kafka data is stored in the Docker volume:
+
+```text
+kafka_data
+```
+
+---
+
+# Starting the Services
+
+For local development, a practical startup sequence is:
+
+```text
+1. PostgreSQL
+       ↓
+2. Kafka
+       ↓
+3. Discovery Service
+       ↓
+4. UserService
+       ↓
+5. ProductService
+       ↓
+6. PaymentService
+       ↓
+7. NotificationService
+       ↓
+8. OrderService
+       ↓
+9. ApiGateway
+```
+
+Mailpit can be started alongside the services before testing notification delivery.
+
+---
+
+## Discovery Service
+
+```bash
+cd discovery-service
+mvn spring-boot:run
+```
+
+Runs on:
+
+```text
+http://localhost:8761
+```
+
+---
+
+## UserService
 
 ```bash
 cd UserService
@@ -525,7 +988,9 @@ Runs on:
 http://localhost:8081
 ```
 
-### ProductService
+---
+
+## ProductService
 
 ```bash
 cd ProductService
@@ -538,20 +1003,9 @@ Runs on:
 http://localhost:8082
 ```
 
-### OrderService
+---
 
-```bash
-cd OrderService
-mvn spring-boot:run
-```
-
-Runs on:
-
-```text
-http://localhost:8083
-```
-
-### PaymentService
+## PaymentService
 
 ```bash
 cd PaymentService
@@ -566,108 +1020,163 @@ http://localhost:8084
 
 ---
 
-## Recommended Startup Order
+## NotificationService
 
-For local development:
-
-```text
-1. PostgreSQL
-       ↓
-2. UserService
-       ↓
-3. ProductService
-       ↓
-4. PaymentService
-       ↓
-5. OrderService
+```bash
+cd NotificationService
+mvn spring-boot:run
 ```
 
-`OrderService` depends on the Product and Payment service endpoints being configured.
-
-The current configuration uses:
+Runs on:
 
 ```text
-product-service.base-url=http://localhost:8082
-payment-service.base-url=http://localhost:8084
+http://localhost:8085
 ```
 
 ---
 
-## Example API Flow
+## OrderService
+
+```bash
+cd OrderService
+mvn spring-boot:run
+```
+
+Runs on:
+
+```text
+http://localhost:8083
+```
+
+---
+
+## ApiGateway
+
+```bash
+cd ApiGateway
+mvn spring-boot:run
+```
+
+Runs on:
+
+```text
+http://localhost:8080
+```
+
+---
+
+# Example End-to-End Flow
 
 A typical development flow is:
 
-### 1. Register
+### 1. Start infrastructure
+
+```bash
+docker compose up -d
+docker compose -f docker-compose-kafka.yml up -d
+mailpit
+```
+
+### 2. Start Discovery Service
+
+```text
+http://localhost:8761
+```
+
+### 3. Start application services
+
+Start:
+
+```text
+UserService
+ProductService
+PaymentService
+NotificationService
+OrderService
+ApiGateway
+```
+
+### 4. Register a user
 
 ```http
 POST /api/users/register
 ```
 
-Create a user account.
-
-### 2. Login
+### 5. Login
 
 ```http
 POST /api/users/login
 ```
 
-Receive:
+Receive a JWT access token.
 
-```json
-{
-  "accessToken": "<JWT>"
-}
-```
-
-### 3. Create a product
+### 6. Create a product
 
 ```http
 POST /api/products
 ```
 
-### 4. Create an order
+### 7. Create an order
 
 ```http
 POST /api/orders
 ```
 
-`OrderService` retrieves product information and decreases stock through `ProductService`.
+During order creation, OrderService communicates with ProductService and PaymentService as required by the order workflow.
 
-### 5. Retrieve the order
+### 8. Publish order event
 
-```http
-GET /api/orders/{id}
+After order processing, OrderService publishes:
+
+```text
+OrderCreatedEvent
 ```
 
-### 6. Process/retrieve payment
+to:
 
-```http
-POST /api/payment
-GET /api/payment/{id}
+```text
+order.created
 ```
+
+### 9. NotificationService consumes the event
+
+NotificationService:
+
+```text
+Kafka
+  ↓
+OrderCreatedEvent
+  ↓
+Create notification
+  ↓
+Save notification
+  ↓
+EmailNotificationProvider
+```
+
+### 10. View the email
+
+Open:
+
+```text
+http://localhost:8025
+```
+
+The email should appear in the Mailpit inbox.
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```text
 e_commerce/
 │
+├── ApiGateway/
+│   ├── src/
+│   └── pom.xml
+│
 ├── UserService/
 │   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/ecommerce/UserService/
-│   │   │   │   ├── config/
-│   │   │   │   ├── controller/
-│   │   │   │   ├── dto/
-│   │   │   │   ├── entity/
-│   │   │   │   ├── exception/
-│   │   │   │   ├── mapper/
-│   │   │   │   ├── repository/
-│   │   │   │   ├── security/
-│   │   │   │   └── service/
-│   │   │   └── resources/
-│   │   └── test/
 │   └── pom.xml
 │
 ├── ProductService/
@@ -682,19 +1191,111 @@ e_commerce/
 │   ├── src/
 │   └── pom.xml
 │
+├── NotificationService/
+│   ├── src/
+│   └── pom.xml
+│
+├── discovery-service/
+│   ├── src/
+│   └── pom.xml
+│
 ├── docker-compose.yml
+├── docker-compose-kafka.yml
+├── .env
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## Engineering Practices Demonstrated
+# Key Components
+
+## UserService
+
+```text
+controller
+dto
+entity
+exception
+mapper
+repository
+security
+service
+```
+
+Responsible for authentication, users, JWT generation and user APIs.
+
+## ProductService
+
+```text
+controller
+dto
+entity
+exception
+mapper
+repository
+service
+```
+
+Responsible for product/catalog and stock operations.
+
+## OrderService
+
+```text
+controller
+client
+dto
+entity
+event
+exception
+mapper
+producer
+repository
+security
+service
+```
+
+Responsible for orders, remote product/payment communication and publishing order events.
+
+## PaymentService
+
+```text
+controller
+dto
+entity
+exception
+mapper
+repository
+service
+```
+
+Responsible for payment operations.
+
+## NotificationService
+
+```text
+consumer
+controller
+dto
+entity
+event
+exception
+producer
+repository
+security
+service
+```
+
+Responsible for consuming order events, persisting notifications and delivering email notifications.
+
+---
+
+# Engineering Practices Demonstrated
 
 This project demonstrates practical experience with:
 
-- **Java 21**
-- **Spring Boot 4**
+- Java
+- Spring Boot
 - Spring Web MVC
 - Spring Data JPA
 - Hibernate
@@ -702,36 +1303,41 @@ This project demonstrates practical experience with:
 - Spring Security
 - JWT authentication
 - REST API design
-- REST client integration
+- Spring `RestClient`
 - Microservice boundaries
+- Eureka service discovery
+- Spring Cloud Gateway
 - Database-per-service architecture
+- Apache Kafka
+- Event producers and consumers
 - DTOs and mapping layers
 - Bean Validation
 - Global exception handling
 - OpenAPI / Swagger
 - Actuator
 - Structured logging
+- SMTP email integration
+- Mailpit local email testing
 - Docker Compose
 - Maven
 - JUnit
 - Mockito
 - MockMvc
-- HTTP client testing
 - Git / `.gitignore`
 
 ---
 
-## Design Decisions
+# Design Decisions
 
-### Why separate services?
+## Why separate services?
 
 The application separates business capabilities so that each service can evolve and be deployed independently.
 
-### Why DTOs?
+## Why DTOs?
 
 DTOs prevent persistence entities from becoming the public API contract and provide a clean boundary between the database and REST layer.
 
-### Why service clients?
+## Why service clients?
 
 Remote communication is isolated behind classes such as:
 
@@ -742,46 +1348,97 @@ PaymentServiceClient
 
 This prevents HTTP communication code from leaking into controllers and keeps business logic easier to reason about.
 
-### Why database-per-service?
+## Why database-per-service?
 
-It reduces coupling between services and allows each service to own its data model.
+Each business service owns its own data. This reduces coupling and allows services to evolve their persistence models independently.
 
-### Why JWT?
+## Why JWT?
 
 JWT provides stateless authentication suitable for REST APIs and avoids storing server-side HTTP session state for authenticated requests.
 
+## Why Kafka?
+
+Kafka provides asynchronous communication between services and decouples notification processing from the synchronous order request.
+
+The current example is:
+
+```text
+OrderService
+      ↓
+Kafka
+      ↓
+NotificationService
+```
+
+This allows NotificationService to process the order event independently.
+
+## Why Mailpit?
+
+Mailpit provides a safe local SMTP environment for development. It allows the application to execute the complete email-delivery path without sending real emails.
+
 ---
 
-## Known Improvement Areas
+# Current Limitations / Future Improvements
 
-This repository is a learning/project implementation rather than a production-ready commerce platform. The next engineering improvements would include:
+This repository is a learning/project implementation rather than a production-ready commerce platform.
 
-- API Gateway
-- Service discovery
-- Centralized configuration
+Potential next engineering improvements include:
+
 - Distributed tracing
-- Resilience4j retries/circuit breakers
-- Message broker integration such as Kafka/RabbitMQ
-- Transaction/outbox strategy for cross-service workflows
-- Idempotency for payment/order operations
+- Centralized configuration
+- Resilience4j retries and circuit breakers
+- Transactional Outbox pattern
+- Kafka consumer idempotency
+- Dead-letter topics / DLT handling
+- Schema Registry and Avro/Protobuf/JSON Schema
+- API Gateway authentication/authorization
 - Centralized authentication/authorization
 - Database migrations with Flyway/Liquibase
 - Integration tests using Testcontainers
 - CI/CD pipeline
 - Containerizing each Spring Boot service
+- Production-grade Kafka configuration
 - Production-grade observability
+- Metrics dashboards
+- Centralized log aggregation
+- Rate limiting
+- API versioning
+- Distributed tracing with Micrometer Tracing/OpenTelemetry
 - More comprehensive security tests
 - Contract testing between services
 
-These are intentionally identified as future work rather than claiming functionality that is not currently implemented.
+These are listed as future work rather than claiming functionality that is not currently implemented.
 
 ---
 
-## What This Project Shows a Recruiter
+# What This Project Demonstrates
 
-The main value of this project is not the number of CRUD endpoints. It demonstrates the ability to structure a backend around **business capabilities and service boundaries**, then connect those services through explicit API contracts.
+The main value of this project is not the number of CRUD endpoints. It demonstrates how to structure a backend around **business capabilities and service boundaries**, and how to connect those services through both synchronous and asynchronous communication.
 
-The implementation covers the core backend engineering workflow:
+The current architecture demonstrates:
+
+```text
+                    Client
+                      ↓
+                 API Gateway
+                      ↓
+               Service Discovery
+                      ↓
+        ┌─────────────┴─────────────┐
+        │                           │
+     REST APIs                   Kafka Events
+        │                           │
+        ▼                           ▼
+  Product / Payment           Notification
+        │                           │
+        ▼                           ▼
+    PostgreSQL                   PostgreSQL
+                                    │
+                                    ▼
+                                  Mailpit
+```
+
+The overall backend engineering workflow is:
 
 ```text
 Requirement
@@ -798,20 +1455,24 @@ Persistence
     ↓
 Inter-Service Communication
     ↓
+Asynchronous Events
+    ↓
+Notification
+    ↓
 Exception Handling
     ↓
 Security
     ↓
 Documentation
     ↓
-Automated Tests
+Testing
+    ↓
+Observability
 ```
-
-That makes the repository useful as a demonstration of **backend and microservices engineering fundamentals**, rather than just a collection of Spring Boot CRUD examples.
 
 ---
 
-## Author
+# Author
 
 **Rakesh**
 
@@ -822,5 +1483,6 @@ Focus areas demonstrated in this project:
 ```text
 Java • Spring Boot • REST APIs • Microservices
 PostgreSQL • JPA/Hibernate • Spring Security • JWT
-Testing • Docker • OpenAPI • Maven
+Kafka • Eureka • API Gateway • RestClient
+Testing • Docker • OpenAPI • Maven • Mailpit
 ```
