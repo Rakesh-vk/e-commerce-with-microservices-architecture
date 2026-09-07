@@ -7,9 +7,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="OrderService" />
         <module name="UserService" />
         <module name="ProductService" />
+        <module name="CheckoutService" />
+        <module name="OrderService" />
+        <module name="DiscoveryService" />
         <module name="PaymentService" />
         <module name="ApiGateway" />
       </profile>
@@ -23,19 +25,17 @@
         <module name="NotificationService" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="discovery-service" target="21" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="ApiGateway" options="-parameters" />
+      <module name="CheckoutService" options="-parameters" />
+      <module name="DiscoveryService" options="-parameters" />
       <module name="NotificationService" options="-parameters" />
       <module name="OrderService" options="-parameters" />
       <module name="PaymentService" options="-parameters" />
       <module name="ProductService" options="-parameters" />
       <module name="UserService" options="-parameters" />
-      <module name="discovery-service" options="-parameters" />
     </option>
   </component>
 </project>
