@@ -67,9 +67,11 @@ public class OrderController {
         String customerEmail =
                 (String) request.getAttribute("customerEmail");
 
-        log.info("Creating new order for authenticated user id: {}, request: {}", userId, requestDTO);
+        log.info("Creating new order for authenticated user id: {}, request:" +
+                " {}", userId, requestDTO);
 
-        OrderResponseDTO order = orderServiceImpl.createOrder(requestDTO, userId,customerEmail);
+        OrderResponseDTO order = orderServiceImpl.createOrder(requestDTO,
+                userId,customerEmail);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
